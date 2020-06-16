@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 
 from keras.layers import Input, Dense
-from keras.models import Model
+from keras.models import Model, load_model
 
 class covariance_operations:
 
@@ -30,7 +30,6 @@ class covariance_operations:
         f = open(self.file_path, 'rb')
         self.calculated_covariance = pickle.load(f)
         f.close()
-        return self.calculated_covariance
 
     def get_calculated_covariance(self):
         return self.calculated_covariance
@@ -39,8 +38,6 @@ class covariance_operations:
         test_list = self.calculated_covariance[feature_num]
         result = [idx for idx, val in enumerate(test_list) if abs(val) > threshold]
         return result
-        
-        
         
 class autoencoder_operations:
 
@@ -72,7 +69,63 @@ class autoencoder_operations:
         self.model.save(self.file_path)
 
     def load_model(self):
-        self.model = load_model(file_path)
+        self.model = load_model(self.file_path)
 
     def get_model(self):
         return self.model
+
+    def calculate_predict(self, data):
+        return self.model.predict(data)
+
+class error_calculator:
+
+    def __init__(self, model, data, feature_cnt, file_path, covariance_operator, threshold):
+        self.model = model
+        self.data = data
+        self.file_path = file_path
+        self.feature_cnt = feature_cnt
+        self.covariance_operator = covariance_operator
+        self.threshold = threshold
+        self.error = np.zeros(feature_cnt)
+        self.actual_error = self.calculate_error(self.calculate_result(self.data))
+                                      
+    def calculate_result(self, data):
+        return self.model.calculate_predict(data)
+
+    def calculate_error(self, predicted_data):
+        return np.sum(abs(self.data - predicted_data))
+
+    def calculate_result_by_removing_features( self, data,
+                                               feature_index,
+                                               removing_features):
+        data[:, feature_index] = 0
+        data[:, removing_features] = 0
+
+        return self.model.calculate_predict(data)
+    
+    def calculate_error_by_removing_features( self, feature_index, removing_features):
+
+        result = self.calculate_result_by_removing_features( self.data,
+                                          feature_index, removing_features)
+    
+        return (self.calculate_error(result) - self.actual_error) / (len(removing_features) + 1)
+
+    def calculate_all_errors(self):
+
+        #actual_result = calculate_result(auto_encoder, data)
+        #actual_error = calculate_error(data, actual_result)
+        
+        for i in range(0, self.feature_cnt):
+            res = self.covariance_operator.get_all_id_with_correlation(i, self.threshold)
+            print(i)
+            self.error[i] = self.calculate_error_by_removing_features(i, res)
+
+    def save_errors(self):
+        f = open(self.file_path, 'wb')
+        pickle.dump(self.error, f)
+        f.close()
+
+    def load_saved_errors(self):
+        f = open(self.file_path, 'rb')
+        self.error = pickle.load(f)
+        f.close()

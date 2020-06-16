@@ -1,6 +1,6 @@
 from keras.datasets import mnist
 import numpy as np
-from CommonCode import autoencoder_operations, covariance_operations
+from CommonCode import autoencoder_operations, covariance_operations, error_calculator
 
 def normalize_dataset(data):
     return data.astype('float32') / 255.
@@ -27,6 +27,10 @@ def train_model(auto_encoder):
     auto_encoder.train_model()
     auto_encoder.save_model()
 
+def load_model(auto_encoder):
+    auto_encoder.load_model()
+    return auto_encoder.get_model()
+
 def create_covariance_obj(data):
     feature_cnt = data.shape[1]
     covariance_file_path = "covariance.pckl"
@@ -41,9 +45,24 @@ def calculate_covariance(covariance_operator):
     covariance_operator.save_covariance()
 
 def load_covariance(covariance_operator):
-    return covariance_operator.load_saved_covariance()
-    
+    covariance_operator.load_saved_covariance()
+    return covariance_operator.get_calculated_covariance()
 
+def create_error_calculator_obj(train_model_operator, data,
+                                covariance_operator):
+    feature_cnt = data.shape[1]
+    errors_file_path = "errors.pckl"
+    threshold = 0.01
+    error_calculator_obj = error_calculator( train_model_operator, data, feature_cnt,
+                                             errors_file_path, covariance_operator,
+                                             threshold)
+    
+    return error_calculator_obj
+
+def calculate_error(error_calculator_obj):
+    error_calculator_obj.calculate_all_errors()
+    error_calculator_obj.save_errors()
+    
 def main():
     x_train, x_test = load_dataset()
 
@@ -56,9 +75,15 @@ def main():
 
     train_model_operator = create_train_model_obj(x_train)
     #train_model(train_model_operator)
-
+    auto_encoder_model = load_model(train_model_operator)
+    
     covariance_operator = create_covariance_obj(x_train)
     #calculate_covariance(covariance_operator)
-    calculated_covariance = load_covariance(covariance_operator)    
+    calculated_covariance = load_covariance(covariance_operator)
+
+    error_calculator_obj = create_error_calculator_obj(train_model_operator, x_train,
+                                                       covariance_operator)
+    calculate_error(error_calculator_obj)
+    
 
 main()
