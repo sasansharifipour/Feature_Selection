@@ -92,12 +92,20 @@ def main():
 
     sum_error = (np.sum(abs(error)))
     temp = 0
-    
-    data = np.argsort(error)[::-1]
     selected_id = []
+    
+    for i in range(0 , 784):
+        data = np.argsort(error)[::-1]
+        selected_id.append(data[i])
+        error[data[i + 1]] = error_calculator_obj.calculate_error_by_exception_indexes(data[i + 1], selected_id)
+        
+    
     img = np.zeros(784)
     
     for i in range(0, 784):
+        selected_id.append(data[i])
+        
+        
         temp = temp + abs(error[data[i]])
 
         if ((temp / sum_error) < 0.99):
@@ -115,3 +123,7 @@ def main():
     plt.show()
 
 main()
+l1 = [1, 2, 3]
+l2 = [2, 3, 4]
+l3 = [x for x in l1 if x not in l2]
+print(l3)

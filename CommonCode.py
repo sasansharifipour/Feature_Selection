@@ -114,6 +114,11 @@ class error_calculator:
             res = self.covariance_operator.get_all_id_with_correlation(i, self.threshold)
             self.error[i] = self.calculate_error_by_removing_features(i, res)
 
+    def calculate_error_by_exception_indexes(self, feature_index, exception_indexes):
+        res = self.covariance_operator.get_all_id_with_correlation(feature_index, self.threshold)
+        good_indexes = [x for x in res if x not in exception_indexes]
+        return self.calculate_error_by_removing_features(feature_index, good_indexes)
+
     def save_errors(self):
         f = open(self.file_path, 'wb')
         pickle.dump(self.error, f)
