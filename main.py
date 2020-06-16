@@ -1,6 +1,7 @@
 from keras.datasets import mnist
 import numpy as np
 from CommonCode import autoencoder_operations, covariance_operations, error_calculator
+import matplotlib.pyplot as plt
 
 def normalize_dataset(data):
     return data.astype('float32') / 255.
@@ -86,8 +87,31 @@ def main():
 
     error_calculator_obj = create_error_calculator_obj(train_model_operator, x_train,
                                                        covariance_operator)
-    calculate_error(error_calculator_obj)
+    #calculate_error(error_calculator_obj)
     error = load_error(error_calculator_obj)
 
+    sum_error = (np.sum(abs(error)))
+    temp = 0
+    
+    data = np.argsort(error)[::-1]
+    selected_id = []
+    img = np.zeros(784)
+    
+    for i in range(0, 784):
+        temp = temp + abs(error[data[i]])
+
+        if ((temp / sum_error) < 0.99):
+            selected_id.append(data[i])
+            img[data[i]] = 1
+        else:
+            break
+
+    print(len(selected_id))
+    
+    imgShow = np.reshape(img, (28, 28))
+
+    plt.figure()
+    plt.imshow(imgShow)
+    plt.show()
 
 main()
