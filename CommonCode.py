@@ -87,7 +87,6 @@ class error_calculator:
         self.covariance_operator = covariance_operator
         self.threshold = threshold
         self.error = np.zeros(feature_cnt)
-        self.actual_error = self.calculate_error(self.calculate_result(self.data))
                                       
     def calculate_result(self, data):
         return self.model.calculate_predict(data)
@@ -107,17 +106,12 @@ class error_calculator:
 
         result = self.calculate_result_by_removing_features( self.data,
                                           feature_index, removing_features)
-    
-        return (self.calculate_error(result) - self.actual_error) / (len(removing_features) + 1)
-
-    def calculate_all_errors(self):
-
-        #actual_result = calculate_result(auto_encoder, data)
-        #actual_error = calculate_error(data, actual_result)
         
+        return (self.calculate_error(result)) / (len(removing_features) + 1)
+
+    def calculate_all_errors(self): 
         for i in range(0, self.feature_cnt):
             res = self.covariance_operator.get_all_id_with_correlation(i, self.threshold)
-            print(i)
             self.error[i] = self.calculate_error_by_removing_features(i, res)
 
     def save_errors(self):
@@ -129,3 +123,6 @@ class error_calculator:
         f = open(self.file_path, 'rb')
         self.error = pickle.load(f)
         f.close()
+        
+    def get_errors(self):
+        return self.error

@@ -56,8 +56,11 @@ def create_error_calculator_obj(train_model_operator, data,
     error_calculator_obj = error_calculator( train_model_operator, data, feature_cnt,
                                              errors_file_path, covariance_operator,
                                              threshold)
-    
     return error_calculator_obj
+
+def load_error(error_calculator_obj):
+    error_calculator_obj.load_saved_errors()
+    return error_calculator_obj.get_errors()
 
 def calculate_error(error_calculator_obj):
     error_calculator_obj.calculate_all_errors()
@@ -84,6 +87,7 @@ def main():
     error_calculator_obj = create_error_calculator_obj(train_model_operator, x_train,
                                                        covariance_operator)
     calculate_error(error_calculator_obj)
-    
+    error = load_error(error_calculator_obj)
+
 
 main()
